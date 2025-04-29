@@ -13,11 +13,13 @@ import { requestNotificationPermission } from './firebase';
 function App() {
   const [user, setUser] = useState(null);
   const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fcmToken, setFcmToken] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 3, 29)); // 29 апреля 2025 по умолчанию
   
   // Отслеживание состояния аутентификации
   useEffect(() => {
@@ -83,6 +85,38 @@ function App() {
       return () => clearInterval(refreshInterval);
     }
   }, [user]);
+  
+  // Фильтрация задач по выбранной дате
+  useEffect(() => {
+    // Функция для фильтрации задач по дате
+    const filterTasksByDate = () => {
+      if (!selectedDate) {
+        setFilteredTasks(tasks);
+        return;
+      }
+      
+      const filtered = tasks.filter(task => {
+        if (!task.dueDate) return false;
+        
+        const taskDate = new Date(task.dueDate);
+        return (
+          taskDate.getDate() === selectedDate.getDate() &&
+          taskDate.getMonth() === selectedDate.getMonth() &&
+          taskDate.getFullYear() === selectedDate.getFullYear()
+        );
+      });
+      
+      setFilteredTasks(filtered);
+    };
+    
+    filterTasksByDate();
+  }, [tasks, selectedDate]);
+  
+  // Обработчик выбора даты из компонента WeekDays
+  const handleDateSelect = (date) => {
+    console.log("Выбрана дата:", date.toISOString().split('T')[0]);
+    setSelectedDate(date);
+  };
   
   // Проверка просроченных задач и дедлайнов
   useEffect(() => {
@@ -320,16 +354,16 @@ function App() {
             </div>
           </div>
           
-          <WeekDays />
+          <WeekDays onDateSelect={handleDateSelect} />
           
           <div className="mb-4 mt-4">
-            {tasks.length === 0 || (!showCompleted && tasks.every(task => task.completed)) ? (
+            {filteredTasks.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                У вас нет активных задач. Все задачи выполнены!
+                У вас нет активных задач на эту дату.
               </div>
             ) : (
               <TaskList
-                tasks={tasks}
+                tasks={filteredTasks}
                 toggleComplete={toggleComplete}
                 deleteTask={deleteTask}
                 startEditing={startEditing}
@@ -343,6 +377,7 @@ function App() {
             updateTask={updateTask}
             editingTask={editingTask}
             setEditingTask={setEditingTask}
+            selectedDate={selectedDate}
           />
           
           {/* Секция уведомлений */}

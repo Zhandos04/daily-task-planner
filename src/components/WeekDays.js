@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const WeekDays = () => {
+const WeekDays = ({ onDateSelect }) => {
   // Дни недели
   const daysOfWeek = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
   
   // Задаем конкретные даты как на скриншоте
   const fixedDates = [28, 29, 30, 1, 2, 3, 4];
+  const fixedMonths = [3, 3, 3, 4, 4, 4, 4]; // 3 = апрель, 4 = май
+  const fixedYears = [2025, 2025, 2025, 2025, 2025, 2025, 2025];
   
   // Состояние для активного дня (по умолчанию вторник с индексом 1)
   const [activeDay, setActiveDay] = useState(1);
   
+  // При монтировании компонента отправляем выбранную дату по умолчанию
+  useEffect(() => {
+    if (onDateSelect) {
+      const defaultDate = new Date(fixedYears[activeDay], fixedMonths[activeDay], fixedDates[activeDay]);
+      onDateSelect(defaultDate);
+    }
+  }, []);
+  
   // Функция для изменения активного дня при клике
   const handleDayClick = (index) => {
     setActiveDay(index);
+    
+    // Если передан обработчик выбора даты, вызываем его с выбранной датой
+    if (onDateSelect) {
+      const selectedDate = new Date(fixedYears[index], fixedMonths[index], fixedDates[index]);
+      onDateSelect(selectedDate);
+    }
   };
   
   return (

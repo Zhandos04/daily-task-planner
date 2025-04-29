@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Edit, CheckCircle, Circle } from 'lucide-react';
+import { Trash2, Edit, CheckCircle } from 'lucide-react';
 
 const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
   const [selected, setSelected] = useState(false);
@@ -123,14 +123,7 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
             </div>
           </div>
           
-          {/* Иконка состояния задачи */}
-          <div className="ml-2">
-            {task.completed ? (
-              <CheckCircle className="h-6 w-6 text-green-500" />
-            ) : (
-              <Circle className="h-6 w-6 text-gray-400" />
-            )}
-          </div>
+          {/* Удалено: Иконка состояния задачи */}
         </div>
         
         {/* Кнопки действий */}
