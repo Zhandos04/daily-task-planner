@@ -13,28 +13,28 @@ import {
   Timestamp
 } from 'firebase/firestore';
 
-// Коллекция задач
+// Tasks collection
 const tasksCollection = collection(db, 'tasks');
 
-// Показать локальное уведомление в браузере
+// Show local notification in browser
 export const showLocalNotification = async (title, body, type) => {
   try {
-    // Проверяем поддержку уведомлений в браузере
+    // Check browser notification support
     if (!("Notification" in window)) {
-      console.warn("Этот браузер не поддерживает уведомления");
+      console.warn("This browser doesn't support notifications");
       return false;
     }
 
-    // Проверяем разрешение
+    // Check permission
     if (Notification.permission === "granted") {
-      // Если всё хорошо, создаем уведомление
+      // If all good, create notification
       const notification = new Notification(title, {
         body: body,
         icon: '/logo192.png',
         tag: `notification-${Date.now()}`
       });
 
-      // Обработка клика по уведомлению
+      // Handle click on notification
       notification.onclick = function() {
         window.focus();
         notification.close();
@@ -42,7 +42,7 @@ export const showLocalNotification = async (title, body, type) => {
 
       return true;
     } else if (Notification.permission !== "denied") {
-      // Запрашиваем разрешение
+      // Request permission
       const permission = await Notification.requestPermission();
       
       if (permission === "granted") {
@@ -52,52 +52,52 @@ export const showLocalNotification = async (title, body, type) => {
     
     return false;
   } catch (error) {
-    console.error("Ошибка при показе уведомления:", error);
+    console.error("Error showing notification:", error);
     return false;
   }
 };
 
-// Получить все задачи для конкретного пользователя
+// Get all tasks for a specific user
 export const getTasks = async (userId) => {
   try {
-    console.log("Загрузка задач для пользователя:", userId);
+    console.log("Loading tasks for user:", userId);
     const q = query(
       tasksCollection, 
       where('userId', '==', userId)
     );
     
     const snapshot = await getDocs(q);
-    console.log(`Получено ${snapshot.docs.length} документов из Firestore`);
+    console.log(`Received ${snapshot.docs.length} documents from Firestore`);
     
     const tasks = snapshot.docs.map(doc => {
       const data = doc.data();
-      console.log(`Обработка задачи ${doc.id}:`, data);
+      console.log(`Processing task ${doc.id}:`, data);
       
-      // Обработка createdAt в разных форматах
+      // Handle createdAt in different formats
       let createdAt = data.createdAt;
       if (createdAt) {
         if (typeof createdAt.toDate === 'function') {
-          // Это Firebase Timestamp
+          // This is Firebase Timestamp
           createdAt = createdAt.toDate();
-          console.log(`Преобразован Timestamp в Date для задачи ${doc.id}`);
+          console.log(`Converted Timestamp to Date for task ${doc.id}`);
         } else if (typeof createdAt === 'string') {
-          // Это строка ISO
+          // This is ISO string
           createdAt = new Date(createdAt);
-          console.log(`Преобразована строка в Date для задачи ${doc.id}`);
+          console.log(`Converted string to Date for task ${doc.id}`);
         } else if (createdAt instanceof Date) {
-          // Это уже Date, ничего не делаем
-          console.log(`createdAt уже является Date для задачи ${doc.id}`);
+          // This is already Date, do nothing
+          console.log(`createdAt is already Date for task ${doc.id}`);
         } else {
-          // Неизвестный формат, используем текущую дату
-          console.warn(`Неизвестный формат createdAt для задачи ${doc.id}:`, createdAt);
+          // Unknown format, use current date
+          console.warn(`Unknown createdAt format for task ${doc.id}:`, createdAt);
           createdAt = new Date();
         }
       } else {
-        console.warn(`createdAt отсутствует для задачи ${doc.id}`);
-        createdAt = new Date(); // Если поля нет, используем текущую дату
+        console.warn(`createdAt is missing for task ${doc.id}`);
+        createdAt = new Date(); // If field is missing, use current date
       }
       
-      // Обработка dueDate
+      // Handle dueDate
       let dueDate = data.dueDate;
       if (dueDate) {
         if (typeof dueDate.toDate === 'function') {
@@ -105,7 +105,7 @@ export const getTasks = async (userId) => {
         } else if (typeof dueDate === 'string') {
           dueDate = new Date(dueDate);
         }
-        // Если это уже Date, ничего не делаем
+        // If it's already Date, do nothing
       }
       
       return {
@@ -116,24 +116,24 @@ export const getTasks = async (userId) => {
       };
     });
     
-    // Сортируем задачи после получения (так как orderBy может не работать с разными типами данных)
+    // Sort tasks after retrieval (as orderBy might not work with different data types)
     tasks.sort((a, b) => {
       if (!a.createdAt || !b.createdAt) return 0;
-      return b.createdAt - a.createdAt; // От новых к старым
+      return b.createdAt - a.createdAt; // From newest to oldest
     });
     
-    console.log(`Успешно загружено и обработано ${tasks.length} задач`);
+    console.log(`Successfully loaded and processed ${tasks.length} tasks`);
     return tasks;
   } catch (error) {
-    console.error("Ошибка при получении задач:", error);
+    console.error("Error getting tasks:", error);
     return [];
   }
 };
 
-// Добавить новую задачу
+// Add new task
 export const addTask = async (userId, text, dueDate, priority) => {
   try {
-    console.log("Добавление новой задачи:", { text, dueDate, priority });
+    console.log("Adding new task:", { text, dueDate, priority });
     
     const task = {
       text,
@@ -144,79 +144,79 @@ export const addTask = async (userId, text, dueDate, priority) => {
       oneHourNotified: false,
       upcomingNotified: false,
       userId,
-      createdAt: serverTimestamp() // Используем serverTimestamp для базы данных
+      createdAt: serverTimestamp() // Use serverTimestamp for database
     };
     
-    console.log("Данные для сохранения:", task);
+    console.log("Data to save:", task);
     const docRef = await addDoc(tasksCollection, task);
-    console.log(`Задача успешно добавлена с ID: ${docRef.id}`);
+    console.log(`Task successfully added with ID: ${docRef.id}`);
     
-    // Возвращаем объект для UI с локальной меткой времени для немедленного отображения
+    // Return object for UI with local timestamp for immediate display
     const clientTask = {
       id: docRef.id,
       ...task,
-      createdAt: new Date() // Локальная метка времени
+      createdAt: new Date() // Local timestamp
     };
     
-    console.log("Задача для отображения в UI:", clientTask);
+    console.log("Task for UI display:", clientTask);
     return clientTask;
   } catch (error) {
-    console.error("Ошибка при добавлении задачи:", error);
+    console.error("Error adding task:", error);
     throw error;
   }
 };
 
-// Обновить задачу
+// Update task
 export const updateTask = async (taskId, data) => {
   try {
-    console.log(`Обновление задачи ${taskId}:`, data);
+    console.log(`Updating task ${taskId}:`, data);
     const taskRef = doc(db, 'tasks', taskId);
     await updateDoc(taskRef, data);
-    console.log(`Задача ${taskId} успешно обновлена`);
+    console.log(`Task ${taskId} successfully updated`);
     return true;
   } catch (error) {
-    console.error(`Ошибка при обновлении задачи ${taskId}:`, error);
+    console.error(`Error updating task ${taskId}:`, error);
     throw error;
   }
 };
 
-// Удалить задачу
+// Delete task
 export const deleteTask = async (taskId) => {
   try {
-    console.log(`Удаление задачи ${taskId}`);
+    console.log(`Deleting task ${taskId}`);
     const taskRef = doc(db, 'tasks', taskId);
     await deleteDoc(taskRef);
-    console.log(`Задача ${taskId} успешно удалена`);
+    console.log(`Task ${taskId} successfully deleted`);
     return true;
   } catch (error) {
-    console.error(`Ошибка при удалении задачи ${taskId}:`, error);
+    console.error(`Error deleting task ${taskId}:`, error);
     throw error;
   }
 };
 
-// Отметить задачу как выполненную или невыполненную
+// Mark task as completed or uncompleted
 export const toggleTaskComplete = async (taskId, completed) => {
   try {
-    console.log(`Изменение статуса задачи ${taskId} на ${completed ? 'выполнено' : 'не выполнено'}`);
+    console.log(`Changing task status ${taskId} to ${completed ? 'completed' : 'not completed'}`);
     const taskRef = doc(db, 'tasks', taskId);
     await updateDoc(taskRef, { completed });
-    console.log(`Статус задачи ${taskId} успешно обновлен`);
+    console.log(`Task ${taskId} status successfully updated`);
     return true;
   } catch (error) {
-    console.error(`Ошибка при изменении статуса задачи ${taskId}:`, error);
+    console.error(`Error changing task status ${taskId}:`, error);
     throw error;
   }
 };
 
-// Форматирование даты и времени
+// Format date and time
 const formatDateTime = (dateString) => {
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) {
-      console.warn("Получена невалидная дата:", dateString);
-      return "Неизвестная дата";
+      console.warn("Received invalid date:", dateString);
+      return "Unknown date";
     }
-    return date.toLocaleString('ru-RU', {
+    return date.toLocaleString('en-US', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -224,38 +224,38 @@ const formatDateTime = (dateString) => {
       minute: '2-digit'
     });
   } catch (error) {
-    console.error("Ошибка при форматировании даты:", error);
-    return "Ошибка даты";
+    console.error("Error formatting date:", error);
+    return "Date error";
   }
 };
 
-// Для уведомлений о просроченных задачах
+// For overdue task notifications
 export const sendDueTaskNotification = async (userId, taskText) => {
   return showLocalNotification(
-    'Срок задачи истек',
-    `Задача "${taskText}" просрочена!`,
+    'Task deadline has passed',
+    `Task "${taskText}" is overdue!`,
     'due'
   );
 };
 
-// Для уведомлений за 1 час до дедлайна
+// For 1 hour before deadline notifications
 export const sendOneHourTaskNotification = async (userId, taskText, dueDate) => {
   const formattedDate = formatDateTime(dueDate);
   
   return showLocalNotification(
-    'Остался час до дедлайна!',
-    `Задача "${taskText}" должна быть выполнена к ${formattedDate} (через 1 час)`,
+    'One hour until deadline!',
+    `Task "${taskText}" is due at ${formattedDate} (in 1 hour)`,
     'oneHour'
   );
 };
 
-// Для уведомлений о скором дедлайне (менее 24 часов)
+// For upcoming deadline notifications (less than 24 hours)
 export const sendUpcomingTaskNotification = async (userId, taskText, dueDate) => {
   const formattedDate = formatDateTime(dueDate);
   
   return showLocalNotification(
-    'Приближается срок задачи',
-    `Задача "${taskText}" должна быть выполнена к ${formattedDate}`,
+    'Task deadline approaching',
+    `Task "${taskText}" is due at ${formattedDate}`,
     'upcoming'
   );
 };

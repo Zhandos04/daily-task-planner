@@ -9,6 +9,7 @@ import Auth from './components/Auth';
 import * as taskService from './services/taskService';
 import FCMNotification from './components/FCMNotification';
 import { requestNotificationPermission } from './firebase';
+import { CheckSquare, CheckCircle, Circle } from 'lucide-react';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -19,9 +20,9 @@ function App() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fcmToken, setFcmToken] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 3, 29)); // 29 апреля 2025 по умолчанию
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 3, 29)); // April 29, 2025 by default
   
-  // Отслеживание состояния аутентификации
+  // Authentication state tracking
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -31,7 +32,7 @@ function App() {
     return () => unsubscribe();
   }, []);
   
-  // Запрос разрешения на уведомления и получение FCM токена
+  // Request notification permission and get FCM token
   useEffect(() => {
     const setupFCM = async () => {
       if (user) {
@@ -39,10 +40,10 @@ function App() {
           const token = await requestNotificationPermission();
           if (token) {
             setFcmToken(token);
-            console.log("FCM токен получен:", token);
+            console.log("FCM token received:", token);
           }
         } catch (error) {
-          console.error("Ошибка при настройке FCM:", error);
+          console.error("Error setting up FCM:", error);
         }
       }
     };
@@ -52,27 +53,27 @@ function App() {
     }
   }, [user]);
   
-  // Загрузка задач из Firebase
+  // Load tasks from Firebase
   useEffect(() => {
     const loadTasks = async () => {
       if (user) {
         try {
-          console.log("Загрузка задач для пользователя:", user.uid);
+          console.log("Loading tasks for user:", user.uid);
           const userTasks = await taskService.getTasks(user.uid);
           
           if (userTasks.length > 0) {
-            console.log(`Загружено ${userTasks.length} задач`);
+            console.log(`Loaded ${userTasks.length} tasks`);
             setTasks(userTasks);
           } else {
-            console.log("Задачи не найдены");
+            console.log("No tasks found");
             setTasks([]);
           }
 
           if (userTasks.some(task => !task.createdAt)) {
-            console.warn("Внимание: обнаружены задачи без временной метки createdAt");
+            console.warn("Warning: tasks without createdAt timestamp detected");
           }
         } catch (error) {
-          console.error("Ошибка загрузки задач:", error);
+          console.error("Error loading tasks:", error);
         }
       } else {
         setTasks([]);
@@ -86,9 +87,9 @@ function App() {
     }
   }, [user]);
   
-  // Фильтрация задач по выбранной дате
+  // Filter tasks by selected date
   useEffect(() => {
-    // Функция для фильтрации задач по дате
+    // Function to filter tasks by date
     const filterTasksByDate = () => {
       if (!selectedDate) {
         setFilteredTasks(tasks);
@@ -110,29 +111,29 @@ function App() {
     };
     
     filterTasksByDate();
-  }, [tasks, selectedDate]);
+  }, [tasks, selectedDate, showCompleted]);
   
-  // Обработчик выбора даты из компонента WeekDays
+  // Handle date selection from WeekDays component
   const handleDateSelect = (date) => {
-    console.log("Выбрана дата:", date.toISOString().split('T')[0]);
+    console.log("Selected date:", date.toISOString().split('T')[0]);
     setSelectedDate(date);
   };
   
-  // Проверка просроченных задач и дедлайнов
+  // Check for overdue tasks and deadlines
   useEffect(() => {
     if (!user) return;
     
     const checkDueTasks = async () => {
       const now = new Date();
       
-      // Проверка просроченных задач (уже наступил дедлайн)
+      // Check overdue tasks (deadline has passed)
       const dueTasks = tasks.filter(task => {
         if (task.completed || !task.dueDate || task.notified) return false;
         const taskDate = new Date(task.dueDate);
         return taskDate <= now;
       });
       
-      // Проверка задач с дедлайном через 1 час
+      // Check tasks with deadline in 1 hour
       const oneHourTasks = tasks.filter(task => {
         if (task.completed || !task.dueDate || task.oneHourNotified) return false;
         const taskDate = new Date(task.dueDate);
@@ -141,7 +142,7 @@ function App() {
         return diffHours > 0 && diffHours <= 1;
       });
       
-      // Проверка задач со скорым дедлайном (менее 24 часов)
+      // Check tasks with upcoming deadline (less than 24 hours)
       const upcomingTasks = tasks.filter(task => {
         if (task.completed || !task.dueDate || task.upcomingNotified) return false;
         const taskDate = new Date(task.dueDate);
@@ -150,7 +151,7 @@ function App() {
         return diffHours > 1 && diffHours < 24;
       });
       
-      // Обработка просроченных задач
+      // Handle overdue tasks
       if (dueTasks.length > 0) {
         const newNotifications = dueTasks.map(task => ({
           id: Date.now() + Math.random(),
@@ -160,23 +161,23 @@ function App() {
         
         setNotifications(prev => [...prev, ...newNotifications]);
         
-        // Отмечаем задачи как уведомленные и показываем браузерные уведомления
+        // Mark tasks as notified and show browser notifications
         const updatedTasks = [...tasks];
         for (const dueTask of dueTasks) {
           const index = updatedTasks.findIndex(t => t.id === dueTask.id);
           if (index !== -1) {
             updatedTasks[index] = { ...updatedTasks[index], notified: true };
-            // Также обновляем в базе данных
+            // Also update in database
             await taskService.updateTask(dueTask.id, { notified: true });
             
-            // Показываем браузерное уведомление
+            // Show browser notification
             await taskService.sendDueTaskNotification(user.uid, dueTask.text);
           }
         }
         setTasks(updatedTasks);
       }
       
-      // Обработка задач с дедлайном через 1 час
+      // Handle tasks with deadline in 1 hour
       if (oneHourTasks.length > 0) {
         const newNotifications = oneHourTasks.map(task => ({
           id: Date.now() + Math.random(),
@@ -198,7 +199,7 @@ function App() {
         setTasks(updatedTasks);
       }
       
-      // Обработка задач со скорым дедлайном
+      // Handle tasks with upcoming deadline
       if (upcomingTasks.length > 0) {
         const newNotifications = upcomingTasks.map(task => ({
           id: Date.now() + Math.random(),
@@ -221,14 +222,14 @@ function App() {
       }
     };
     
-    // Проверяем задачи каждую минуту
+    // Check tasks every minute
     const interval = setInterval(checkDueTasks, 60000);
-    checkDueTasks(); // Инициальная проверка
+    checkDueTasks(); // Initial check
     
     return () => clearInterval(interval);
   }, [user, tasks]);
   
-  // Добавление задачи
+  // Add task
   const addTask = async (text, dueDate, priority) => {
     if (!user) return;
     
@@ -236,7 +237,7 @@ function App() {
       const newTask = await taskService.addTask(user.uid, text, dueDate, priority);
       setTasks([newTask, ...tasks]);
       
-      // Добавляем уведомление о создании
+      // Add notification about creation
       setNotifications([
         ...notifications, 
         { id: Date.now(), task: text, type: 'created' }
@@ -246,12 +247,12 @@ function App() {
     }
   };
   
-  // Обновление задачи
+  // Update task
   const updateTask = async (taskId, text, dueDate, priority) => {
     try {
       await taskService.updateTask(taskId, { text, dueDate, priority });
       
-      // Обновляем локальное состояние
+      // Update local state
       setTasks(tasks.map(task => {
         if (task.id === taskId) {
           return { ...task, text, dueDate, priority };
@@ -259,7 +260,7 @@ function App() {
         return task;
       }));
       
-      // Добавляем уведомление о редактировании
+      // Add notification about edit
       setNotifications([
         ...notifications, 
         { id: Date.now(), task: text, type: 'edited' }
@@ -269,17 +270,17 @@ function App() {
     }
   };
   
-  // Удаление задачи
+  // Delete task
   const deleteTask = async (taskId) => {
     try {
       const taskToDelete = tasks.find(task => task.id === taskId);
       
       await taskService.deleteTask(taskId);
       
-      // Обновляем локальное состояние
+      // Update local state
       setTasks(tasks.filter(task => task.id !== taskId));
       
-      // Добавляем уведомление об удалении
+      // Add notification about deletion
       setNotifications([
         ...notifications, 
         { id: Date.now(), task: taskToDelete.text, type: 'deleted' }
@@ -289,7 +290,7 @@ function App() {
     }
   };
   
-  // Изменение статуса выполнения
+  // Toggle task completion status
   const toggleComplete = async (taskId) => {
     try {
       const task = tasks.find(t => t.id === taskId);
@@ -297,7 +298,7 @@ function App() {
       
       await taskService.toggleTaskComplete(taskId, newStatus);
       
-      // Обновляем локальное состояние
+      // Update local state
       setTasks(tasks.map(task => {
         if (task.id === taskId) {
           return { ...task, completed: newStatus };
@@ -305,7 +306,7 @@ function App() {
         return task;
       }));
       
-      // Добавляем уведомление о выполнении если задача отмечена как выполненная
+      // Add notification about completion if task is marked as completed
       if (newStatus) {
         setNotifications([
           ...notifications, 
@@ -317,15 +318,32 @@ function App() {
     }
   };
   
-  // Начало редактирования задачи
+  // Start task editing
   const startEditing = (task) => {
     setEditingTask(task);
   };
   
-  // Удаление уведомления
+  // Remove notification
   const removeNotification = (id) => {
     setNotifications(notifications.filter(notification => notification.id !== id));
   };
+  
+  // Toggle showing completed tasks
+  const toggleShowCompleted = () => {
+    setShowCompleted(!showCompleted);
+  };
+  
+  // Get stats for tasks
+  const getTaskStats = () => {
+    const totalTasks = filteredTasks.length;
+    const completedTasks = filteredTasks.filter(task => task.completed).length;
+    const incompleteTasks = totalTasks - completedTasks;
+    const percentComplete = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    return { totalTasks, completedTasks, incompleteTasks, percentComplete };
+  };
+  
+  const stats = getTaskStats();
   
   if (loading) {
     return (
@@ -337,29 +355,68 @@ function App() {
   
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Компонент для работы с FCM */}
+      {/* FCM component */}
       <FCMNotification setNotifications={setNotifications} />
       
       {user ? (
         <div className="max-w-lg mx-auto p-4">
           <div className="flex justify-between items-center mb-4 mt-3">
             <h1 className="text-2xl font-bold text-gray-800">Today</h1>
-            <div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={toggleShowCompleted}
+                className="flex items-center space-x-1 text-blue-500 text-xs hover:text-blue-700"
+              >
+                {showCompleted ? <CheckSquare className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+                <span>{showCompleted ? "Hide completed" : "Show completed"}</span>
+              </button>
               <button
                 onClick={() => auth.signOut()}
                 className="text-red-500 text-xs hover:text-red-700"
               >
-                Выйти
+                Logout
               </button>
             </div>
           </div>
+          
+          {/* Task stats display */}
+          {filteredTasks.length > 0 && (
+            <div className="mb-3 bg-white rounded-lg shadow-sm p-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    {stats.incompleteTasks > 0 ? (
+                      <span className="font-medium text-red-500">{stats.incompleteTasks} uncompleted</span>
+                    ) : (
+                      <span className="font-medium text-green-500">All tasks completed</span>
+                    )}
+                    {stats.completedTasks > 0 && (
+                      <span className="text-gray-500"> • {stats.completedTasks} completed</span>
+                    )}
+                  </p>
+                </div>
+                <div className="text-sm font-medium text-gray-500">
+                  {stats.percentComplete}% done
+                </div>
+              </div>
+              {/* Progress bar */}
+              <div className="w-full h-2 bg-gray-200 rounded-full mt-2">
+                <div 
+                  className="h-full bg-green-500 rounded-full" 
+                  style={{ width: `${stats.percentComplete}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
           
           <WeekDays onDateSelect={handleDateSelect} />
           
           <div className="mb-4 mt-4">
             {filteredTasks.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                У вас нет активных задач на эту дату.
+                {showCompleted 
+                  ? "You don't have any tasks for this date."
+                  : "You don't have any active tasks for this date."}
               </div>
             ) : (
               <TaskList
@@ -380,7 +437,7 @@ function App() {
             selectedDate={selectedDate}
           />
           
-          {/* Секция уведомлений */}
+          {/* Notifications section */}
           <div className="fixed bottom-4 right-4 w-80">
             {notifications.map((notification, index) => (
               <NotificationItem
@@ -396,7 +453,7 @@ function App() {
         <Auth />
       )}
       
-      {/* Стили для анимаций */}
+      {/* Animation styles */}
       <style jsx>{`
         @keyframes slideIn {
           from {

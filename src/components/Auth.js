@@ -15,9 +15,9 @@ const Auth = () => {
     
     try {
       if (isRegistering) {
-        // Проверка совпадения паролей при регистрации
+        // Password match check for registration
         if (password !== confirmPassword) {
-          setError('Пароли не совпадают');
+          setError('Passwords do not match');
           return;
         }
         await createUserWithEmailAndPassword(auth, email, password);
@@ -25,17 +25,17 @@ const Auth = () => {
         await signInWithEmailAndPassword(auth, email, password);
       }
     } catch (err) {
-      let errorMessage = 'Произошла ошибка при авторизации';
+      let errorMessage = 'An error occurred during authentication';
       
-      // Обработка типичных ошибок Firebase Auth
+      // Handling common Firebase Auth errors
       if (err.code === 'auth/invalid-email') {
-        errorMessage = 'Некорректный адрес электронной почты';
+        errorMessage = 'Invalid email address';
       } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        errorMessage = 'Неверный email или пароль';
+        errorMessage = 'Invalid email or password';
       } else if (err.code === 'auth/email-already-in-use') {
-        errorMessage = 'Этот email уже используется';
+        errorMessage = 'This email is already in use';
       } else if (err.code === 'auth/weak-password') {
-        errorMessage = 'Пароль должен содержать не менее 6 символов';
+        errorMessage = 'Password should be at least 6 characters';
       }
       
       setError(errorMessage);
@@ -45,7 +45,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-pink-50 to-purple-50 p-4">
       <div className="w-full max-w-md">
-        {/* Верхний декоративный элемент */}
+        {/* Top decorative element */}
         <div className="flex justify-center mb-8">
           <div className="w-24 h-24 bg-pink-500 rounded-full flex items-center justify-center shadow-lg">
             <span className="text-white text-4xl">✓</span>
@@ -54,13 +54,13 @@ const Auth = () => {
         
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-pink-100">
           <h2 className="text-3xl font-bold mb-6 text-center text-pink-600">
-            {isRegistering ? 'Создать аккаунт' : 'Добро пожаловать!'}
+            {isRegistering ? 'Create Account' : 'Welcome Back!'}
           </h2>
           
           <p className="text-gray-500 text-center mb-8">
             {isRegistering 
-              ? 'Зарегистрируйтесь, чтобы отслеживать ваши задачи'
-              : 'Войдите, чтобы продолжить работу с вашими задачами'}
+              ? 'Register to track your tasks'
+              : 'Sign in to continue with your tasks'}
           </p>
           
           {error && (
@@ -87,7 +87,7 @@ const Auth = () => {
             
             <div className="mb-6">
               <label className="block text-gray-700 mb-2 font-medium" htmlFor="password">
-                Пароль
+                Password
               </label>
               <input
                 id="password"
@@ -95,7 +95,7 @@ const Auth = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder={isRegistering ? "Минимум 6 символов" : "Введите пароль"}
+                placeholder={isRegistering ? "Minimum 6 characters" : "Enter your password"}
                 required
               />
             </div>
@@ -103,7 +103,7 @@ const Auth = () => {
             {isRegistering && (
               <div className="mb-6">
                 <label className="block text-gray-700 mb-2 font-medium" htmlFor="confirmPassword">
-                  Подтвердите пароль
+                  Confirm Password
                 </label>
                 <input
                   id="confirmPassword"
@@ -111,7 +111,7 @@ const Auth = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Повторите пароль"
+                  placeholder="Repeat password"
                   required
                 />
               </div>
@@ -121,7 +121,7 @@ const Auth = () => {
               type="submit"
               className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl hover:from-pink-600 hover:to-pink-700 transition-colors font-medium text-lg shadow-md"
             >
-              {isRegistering ? 'Зарегистрироваться' : 'Войти'}
+              {isRegistering ? 'Register' : 'Sign In'}
             </button>
           </form>
           
@@ -135,15 +135,15 @@ const Auth = () => {
               }}
               className="text-pink-600 hover:text-pink-800 transition-colors font-medium"
             >
-              {isRegistering ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Создать'}
+              {isRegistering ? 'Already have an account? Sign In' : 'No account? Create one'}
             </button>
           </div>
         </div>
         
-        {/* Нижний декоративный элемент */}
+        {/* Bottom decorative element */}
         <div className="flex justify-center mt-8">
           <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Habit Tracker App. Все права защищены.
+            &copy; {new Date().getFullYear()} Daily Task Planner. All rights reserved.
           </p>
         </div>
       </div>

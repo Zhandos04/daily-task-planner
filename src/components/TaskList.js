@@ -2,17 +2,23 @@ import React from 'react';
 import TaskItem from './TaskItem';
 
 const TaskList = ({ tasks, toggleComplete, deleteTask, startEditing, showCompleted }) => {
-  // Сортировка задач: просроченные и важные первыми, затем остальные по приоритету и типу
+  // Sort tasks: overdue and uncompleted first, then by priority and type
   const sortedTasks = [...tasks].sort((a, b) => {
-    // Первым приоритетом - категория задачи для верной последовательности в интерфейсе
-    // На основе вашего скриншота мы видим следующий порядок:
-    // 1. Self care
-    // 2. Journal
-    // 3. Water
-    // 4. Bodycare
-    // 5. Duolingo
-    // 6. Read
+    // First priority - uncompleted tasks
+    if (!a.completed && b.completed) return -1;
+    if (a.completed && !b.completed) return 1;
     
+    // For tasks with same completion status, check overdue
+    if (!a.completed && !b.completed) {
+      const now = new Date();
+      const aOverdue = a.dueDate && new Date(a.dueDate) < now;
+      const bOverdue = b.dueDate && new Date(b.dueDate) < now;
+      
+      if (aOverdue && !bOverdue) return -1;
+      if (!aOverdue && bOverdue) return 1;
+    }
+    
+    // Next priority - task category
     const categoryOrder = {
       'Self care': 1,
       'Journal': 2,
@@ -40,13 +46,13 @@ const TaskList = ({ tasks, toggleComplete, deleteTask, startEditing, showComplet
       return categoryOrder[aCategory] - categoryOrder[bCategory];
     }
     
-    // Если категорий нет в порядке или они одинаковые, сортируем по приоритету
+    // Then by priority
     const priorityOrder = { high: 0, normal: 1, low: 2 };
     if (a.priority !== b.priority) {
       return priorityOrder[a.priority] - priorityOrder[b.priority];
     }
     
-    // Затем по дате выполнения
+    // Then by due date (closer deadlines first)
     if (a.dueDate && b.dueDate) {
       return new Date(a.dueDate) - new Date(b.dueDate);
     } else if (a.dueDate) {
@@ -55,11 +61,11 @@ const TaskList = ({ tasks, toggleComplete, deleteTask, startEditing, showComplet
       return 1;
     }
     
-    // В последнюю очередь - по ID (времени создания)
+    // Finally by ID (creation time)
     return a.id - b.id;
   });
 
-  // Фильтр для отображения задач
+  // Filter for displaying tasks
   const filteredTasks = showCompleted 
     ? sortedTasks 
     : sortedTasks.filter(task => !task.completed);
@@ -69,8 +75,8 @@ const TaskList = ({ tasks, toggleComplete, deleteTask, startEditing, showComplet
       {filteredTasks.length === 0 ? (
         <div className="text-center p-8 text-gray-500">
           {showCompleted 
-            ? "У вас пока нет ни одной задачи."
-            : "У вас нет активных задач. Все задачи выполнены!"}
+            ? "You don't have any tasks yet."
+            : "You don't have any active tasks. All tasks are completed!"}
         </div>
       ) : (
         filteredTasks.map(task => (

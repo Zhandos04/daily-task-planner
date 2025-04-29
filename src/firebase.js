@@ -11,29 +11,29 @@ const firebaseConfig = {
   appId: "1:437542977622:web:f544ff92cf80d9e54b7bf7"
 };
 
-// Инициализация Firebase
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// Функция для запроса разрешения на уведомления браузера
+// Function to request notification permission
 export const requestNotificationPermission = async () => {
   try {
     if (!("Notification" in window)) {
-      console.warn("Этот браузер не поддерживает уведомления");
+      console.warn("This browser doesn't support notifications");
       return null;
     }
     
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      console.log('Разрешение на уведомления получено');
+      console.log('Notification permission granted');
       return true;
     } else {
-      console.log('Разрешение на уведомления не получено');
+      console.log('Notification permission not granted');
       return false;
     }
   } catch (error) {
-    console.error('Ошибка при запросе разрешения на уведомления:', error);
+    console.error('Error requesting notification permission:', error);
     return false;
   }
 };

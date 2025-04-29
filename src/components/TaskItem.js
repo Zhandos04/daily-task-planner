@@ -4,7 +4,7 @@ import { Trash2, Edit, CheckCircle } from 'lucide-react';
 const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
   const [selected, setSelected] = useState(false);
   
-  // Функция для проверки скорого дедлайна
+  // Function to check for upcoming deadline
   const getTimeStatus = (dueDate) => {
     if (!dueDate) return { isDeadlineSoon: false, isOverdue: false, remainingHours: null };
     
@@ -14,34 +14,43 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
     const diffHours = diffTime / (1000 * 60 * 60);
     
     return {
-      isDeadlineSoon: diffHours > 0 && diffHours < 1, // Меньше часа до дедлайна
-      isNearDeadline: diffHours > 0 && diffHours < 24, // Меньше 24 часов
+      isDeadlineSoon: diffHours > 0 && diffHours < 1, // Less than an hour to deadline
+      isNearDeadline: diffHours > 0 && diffHours < 24, // Less than 24 hours
       isOverdue: diffHours < 0,
       remainingHours: Math.abs(diffHours)
     };
   };
   
-  // Получаем статус времени
+  // Get time status
   const timeStatus = task.dueDate ? getTimeStatus(task.dueDate) : { isDeadlineSoon: false, isOverdue: false };
   
-  // Функция для получения класса карточки по статусу задачи
+  // Function to get card class based on task status
   const getCardClass = () => {
     if (task.completed) {
-      return 'bg-sky-100'; // Голубой для выполненных
-    } else if (timeStatus.isOverdue) {
-      return 'bg-red-100'; // Красный для просроченных
+      return 'bg-sky-100'; // Blue for completed
+    } else if (timeStatus.isOverdue || !task.completed) {
+      return 'bg-red-100'; // Red for uncompleted and overdue tasks
     } else if (task.priority === 'high') {
-      return 'bg-red-100'; // Красный для высоких приоритетов
-    } else if (task.priority === 'low') {
-      return 'bg-sky-100'; // Голубой для низких приоритетов
+      return 'bg-red-100'; // Red for high priority
     } else {
-      return task.id % 2 === 0 ? 'bg-pink-100' : 'bg-sky-100'; // Чередование для средних
+      return task.id % 2 === 0 ? 'bg-pink-100' : 'bg-sky-100'; // Alternating for medium/low priority
     }
   };
   
-  // Получаем иконку для задачи
+  // Get text color class based on task status
+  const getTextColorClass = () => {
+    if (task.completed) {
+      return 'text-gray-800 line-through';
+    } else if (timeStatus.isOverdue) {
+      return 'text-red-700'; // Darker red text for overdue
+    } else {
+      return 'text-gray-800'; // Default text color
+    }
+  };
+  
+  // Get icon for task
   const getTaskIcon = () => {
-    // Определяем иконку на основе текста задачи
+    // Determine icon based on task text
     if (task.text.toLowerCase().includes('care') || task.text.toLowerCase().includes('teeth')) {
       return '🥤';
     } else if (task.text.toLowerCase().includes('journal')) {
@@ -54,16 +63,16 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
       return '🎓';
     } else if (task.text.toLowerCase().includes('read')) {
       return '📚';
-    } else if (task.text.toLowerCase().includes('презентац')) {
+    } else if (task.text.toLowerCase().includes('presentation')) {
       return '📊';
     } else {
       return '📝';
     }
   };
   
-  // Получаем подзаголовок для задачи
+  // Get subtitle for task
   const getTaskSubtitle = () => {
-    // Определяем подзаголовок на основе текста задачи
+    // Determine subtitle based on task text
     if (task.text.toLowerCase().includes('care') || task.text.toLowerCase().includes('teeth')) {
       return 'Teeth, skincare, haircare';
     } else if (task.text.toLowerCase().includes('journal')) {
@@ -76,8 +85,8 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
       return 'Lesson';
     } else if (task.text.toLowerCase().includes('read')) {
       return 'At least 2 pages daily';
-    } else if (task.text.toLowerCase().includes('презентац')) {
-      return 'Подготовить слайды для встречи';
+    } else if (task.text.toLowerCase().includes('presentation')) {
+      return 'Prepare slides for meeting';
     } else {
       return '';
     }
@@ -115,18 +124,33 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
           <div className="flex-1">
             <div className="flex justify-between">
               <div>
-                <h3 className={`text-gray-800 text-lg font-semibold ${task.completed ? 'line-through' : ''}`}>
+                <h3 className={`${getTextColorClass()} text-lg font-semibold`}>
                   {task.text} {task.completed ? '✓' : ''}
                 </h3>
                 <p className="text-gray-500 text-sm">{getTaskSubtitle()}</p>
+                
+                {/* Show deadline info for uncompleted tasks */}
+                {!task.completed && task.dueDate && (
+                  <p className={`text-sm mt-1 ${timeStatus.isOverdue ? 'text-red-700 font-medium' : 'text-gray-500'}`}>
+                    {timeStatus.isOverdue ? 
+                      'Overdue!' : 
+                      timeStatus.isDeadlineSoon ? 
+                        'Due in less than an hour!' : 
+                        `Due: ${new Date(task.dueDate).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}`
+                    }
+                  </p>
+                )}
               </div>
             </div>
           </div>
-          
-          {/* Удалено: Иконка состояния задачи */}
         </div>
         
-        {/* Кнопки действий */}
+        {/* Action buttons */}
         <div className="absolute top-2 right-2 flex space-x-1">
           <button
             onClick={handleEdit}
@@ -143,7 +167,7 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
         </div>
       </div>
       
-      {/* Панель выполнения задачи - появляется при выборе */}
+      {/* Task completion panel - appears when selected */}
       {selected && !task.completed && (
         <div className="flex justify-center mb-4 -mt-2 animate-fadeIn">
           <button
@@ -151,7 +175,7 @@ const TaskItem = ({ task, toggleComplete, deleteTask, startEditing }) => {
             className="bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition-colors flex items-center"
           >
             <CheckCircle className="h-5 w-5 mr-2" /> 
-            Отметить как выполненное
+            Mark as completed
           </button>
         </div>
       )}

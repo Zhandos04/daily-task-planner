@@ -2,7 +2,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Инициализация Firebase
+// Initialize Firebase
 firebase.initializeApp({
     apiKey: "AIzaSyAgerrIAlHOUTUSNWuX0RCwdySmzS1xGQ8",
     authDomain: "daily-task-planner-c8a1a.firebaseapp.com",
@@ -12,12 +12,12 @@ firebase.initializeApp({
     appId: "1:437542977622:web:f544ff92cf80d9e54b7bf7"
 });
 
-// Получение экземпляра Firebase Messaging
+// Get Firebase Messaging instance
 const messaging = firebase.messaging();
 
-// Обработка фоновых сообщений
+// Handle background messages
 messaging.onBackgroundMessage(function(payload) {
-  console.log('Получено сообщение в фоновом режиме:', payload);
+  console.log('Received background message:', payload);
   
   const notificationTitle = payload.notification.title;
   const notificationOptions = {

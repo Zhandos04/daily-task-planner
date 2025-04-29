@@ -8,21 +8,21 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
   const [priority, setPriority] = useState('normal');
   const [showForm, setShowForm] = useState(false);
   
-  // При начале редактирования задачи
+  // When starting to edit a task
   useEffect(() => {
     if (editingTask) {
       setText(editingTask.text);
       setShowForm(true);
       
-      // Обработка даты и времени из полной даты дедлайна
+      // Process date and time from full deadline date
       if (editingTask.dueDate) {
         const dueDateTime = new Date(editingTask.dueDate);
         
-        // Форматируем дату в формат YYYY-MM-DD для поля ввода
+        // Format date as YYYY-MM-DD for input field
         const formattedDate = dueDateTime.toISOString().split('T')[0];
         setDueDate(formattedDate);
         
-        // Форматируем время в формат HH:MM для поля ввода
+        // Format time as HH:MM for input field
         const hours = dueDateTime.getHours().toString().padStart(2, '0');
         const minutes = dueDateTime.getMinutes().toString().padStart(2, '0');
         setDueTime(`${hours}:${minutes}`);
@@ -43,16 +43,16 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
       return;
     }
     
-    // Создаем полную дату с объединением даты и времени
+    // Create a full date by combining date and time
     let fullDueDate = null;
     if (dueDate) {
       if (dueTime) {
-        // Если указано время, создаем полную дату с временем
+        // If time is specified, create a full date with time
         const [hours, minutes] = dueTime.split(':');
         fullDueDate = new Date(dueDate);
         fullDueDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
       } else {
-        // Если время не указано, используем конец дня (23:59)
+        // If time is not specified, use end of day (23:59)
         fullDueDate = new Date(dueDate);
         fullDueDate.setHours(23, 59, 59);
       }
@@ -67,7 +67,7 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
       addTask(text, dueDateISOString, priority);
     }
     
-    // Сброс формы
+    // Reset form
     setText('');
     setDueDate('');
     setDueTime('');
@@ -88,12 +88,12 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
     setShowForm(true);
   };
   
-  // Получаем текущую дату для минимальной даты в выборе
+  // Get current date for minimum date in date picker
   const today = new Date().toISOString().split('T')[0];
   
   return (
     <>
-      {/* Плавающая кнопка добавления задачи */}
+      {/* Floating add task button */}
       {!showForm && (
         <div className="fixed bottom-8 right-4 z-10">
           <button
@@ -105,12 +105,12 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
         </div>
       )}
       
-      {/* Форма ввода для создания/редактирования задачи */}
+      {/* Form for creating/editing task */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
           <div className="bg-white rounded-lg w-full max-w-lg mx-4 p-4">
             <h2 className="text-xl font-bold mb-4">
-              {editingTask ? 'Редактировать задачу' : 'Создать новую задачу'}
+              {editingTask ? 'Edit Task' : 'Create New Task'}
             </h2>
             
             <form onSubmit={handleSubmit}>
@@ -119,7 +119,7 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
                   type="text"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Введите задачу..."
+                  placeholder="Enter task..."
                   className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                   autoFocus
                 />
@@ -127,7 +127,7 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
               
               <div className="flex flex-col md:flex-row gap-4 mb-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Дата</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                   <input
                     type="date"
                     value={dueDate}
@@ -138,7 +138,7 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
                 </div>
                 
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Время</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                   <input
                     type="time"
                     value={dueTime}
@@ -148,15 +148,15 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
                 </div>
                 
                 <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Приоритет</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                   <select
                     value={priority}
                     onChange={(e) => setPriority(e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                   >
-                    <option value="low">Низкий</option>
-                    <option value="normal">Средний</option>
-                    <option value="high">Высокий</option>
+                    <option value="low">Low</option>
+                    <option value="normal">Medium</option>
+                    <option value="high">High</option>
                   </select>
                 </div>
               </div>
@@ -167,13 +167,13 @@ const TaskForm = ({ addTask, updateTask, editingTask, setEditingTask }) => {
                   onClick={handleCancel}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
                 >
-                  Отмена
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 transition-colors"
                 >
-                  {editingTask ? 'Сохранить' : 'Создать'}
+                  {editingTask ? 'Save' : 'Create'}
                 </button>
               </div>
             </form>

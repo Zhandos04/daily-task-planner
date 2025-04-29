@@ -2,50 +2,50 @@ import React, { useEffect } from 'react';
 import { Bell, AlertTriangle, Plus, Trash2, Check, Edit, Clock } from 'lucide-react';
 
 const NotificationItem = ({ notification, removeNotification, style }) => {
-  // Определение типа уведомления
+  // Define notification type
   let bgColor = "bg-gray-800";
-  let title = "Уведомление";
+  let title = "Notification";
   let icon = <Bell className="h-5 w-5" />;
   
   switch(notification.type) {
     case 'due':
       bgColor = "bg-red-500";
-      title = "Срок задачи истек";
+      title = "Task deadline has passed";
       icon = <AlertTriangle className="h-5 w-5" />;
       break;
     case 'oneHour':
       bgColor = "bg-orange-500";
-      title = "Остался час до дедлайна!";
+      title = "One hour until deadline!";
       icon = <Clock className="h-5 w-5" />;
       break;
     case 'upcoming':
       bgColor = "bg-yellow-500";
-      title = "Приближается срок задачи";
+      title = "Task deadline approaching";
       icon = <Clock className="h-5 w-5" />;
       break;
     case 'created':
       bgColor = "bg-green-500";
-      title = "Задача создана";
+      title = "Task created";
       icon = <Plus className="h-5 w-5" />;
       break;
     case 'deleted':
       bgColor = "bg-red-500";
-      title = "Задача удалена";
+      title = "Task deleted";
       icon = <Trash2 className="h-5 w-5" />;
       break;
     case 'completed':
       bgColor = "bg-blue-500";
-      title = "Задача выполнена";
+      title = "Task completed";
       icon = <Check className="h-5 w-5" />;
       break;
     case 'edited':
       bgColor = "bg-yellow-500";
-      title = "Задача изменена";
+      title = "Task modified";
       icon = <Edit className="h-5 w-5" />;
       break;
   }
   
-  // Автоматическое удаление уведомления через 5 секунд
+  // Auto-remove notification after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => {
       removeNotification(notification.id);
