@@ -20,8 +20,8 @@ function App() {
   const [showCompleted, setShowCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fcmToken, setFcmToken] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 3, 29)); // April 29, 2025 by default
-  
+  const [selectedDate, setSelectedDate] = useState(new Date()); 
+    
   // Authentication state tracking
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {

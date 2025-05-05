@@ -1,52 +1,97 @@
 import React, { useState, useEffect } from 'react';
 
 const WeekDays = ({ onDateSelect }) => {
-  // Days of week
-  const daysOfWeek = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+  // Сокращенные названия дней недели
+  const daysOfWeek = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
   
-  // Set specific dates as in the screenshot
-  const fixedDates = [28, 29, 30, 1, 2, 3, 4];
-  const fixedMonths = [3, 3, 3, 4, 4, 4, 4]; // 3 = April, 4 = May
-  const fixedYears = [2025, 2025, 2025, 2025, 2025, 2025, 2025];
+  // Состояние для хранения дат текущей недели
+  const [weekDates, setWeekDates] = useState([]);
+  // Индекс активного дня
+  const [activeDay, setActiveDay] = useState(0);
   
-  // State for active day (default Tuesday with index 1)
-  const [activeDay, setActiveDay] = useState(1);
+  // Функция для получения даты начала недели (понедельник)
+  const getMonday = (date) => {
+    const day = date.getDay();
+    // В JavaScript воскресенье = 0, поэтому для понедельника нужно особое условие
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff));
+  };
   
-  // When component mounts, send default selected date
+  // Функция для генерации дат недели начиная с понедельника
+  const generateWeekDates = () => {
+    const today = new Date();
+    const monday = getMonday(new Date(today));
+    
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + i);
+      dates.push(date);
+    }
+    
+    return dates;
+  };
+  
+  // Функция для определения индекса сегодняшней даты в массиве
+  const getTodayIndex = (dates) => {
+    const today = new Date();
+    return dates.findIndex(date => 
+      date.getDate() === today.getDate() && 
+      date.getMonth() === today.getMonth() && 
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+  
+  // При монтировании компонента генерируем даты и выбираем сегодняшний день
   useEffect(() => {
+    const dates = generateWeekDates();
+    setWeekDates(dates);
+    
+    // Выбираем сегодняшний день или понедельник, если сегодня не входит в эту неделю
+    const todayIndex = getTodayIndex(dates);
+    const defaultIndex = todayIndex !== -1 ? todayIndex : 0;
+    setActiveDay(defaultIndex);
+    
+    // Вызываем обработчик с выбранной датой
     if (onDateSelect) {
-      const defaultDate = new Date(fixedYears[activeDay], fixedMonths[activeDay], fixedDates[activeDay]);
-      onDateSelect(defaultDate);
+      onDateSelect(dates[defaultIndex]);
     }
   }, []);
   
-  // Function to change active day on click
+  // Функция для изменения активного дня при клике
   const handleDayClick = (index) => {
     setActiveDay(index);
     
-    // If date selection handler is provided, call it with selected date
+    // Если обработчик выбора даты предоставлен, вызываем его
     if (onDateSelect) {
-      const selectedDate = new Date(fixedYears[index], fixedMonths[index], fixedDates[index]);
-      onDateSelect(selectedDate);
+      onDateSelect(weekDates[index]);
     }
   };
   
   return (
     <div className="flex justify-between mb-4">
-      {daysOfWeek.map((day, index) => {
+      {weekDates.map((date, index) => {
         const isActive = index === activeDay;
+        const dayNumber = date.getDate();
+        
+        // Проверяем, является ли дата сегодняшней
+        const today = new Date();
+        const isToday = 
+          date.getDate() === today.getDate() && 
+          date.getMonth() === today.getMonth() && 
+          date.getFullYear() === today.getFullYear();
         
         return (
           <div 
-            key={day} 
+            key={index} 
             className="flex flex-col items-center cursor-pointer"
             onClick={() => handleDayClick(index)}
           >
-            <div className="text-gray-500 text-xs mb-1">{day}</div>
+            <div className="text-gray-500 text-xs mb-1">{daysOfWeek[index]}</div>
             <div className={`w-8 h-8 flex items-center justify-center rounded-full 
-                            ${isActive ? 'bg-pink-500 text-white' : 'border border-pink-300 text-gray-700'}
+                            ${isActive ? 'bg-pink-500 text-white' : isToday ? 'border-2 border-pink-500 text-gray-700' : 'border border-pink-300 text-gray-700'}
                             transition-all duration-200 hover:border-pink-500`}>
-              {fixedDates[index]}
+              {dayNumber}
             </div>
           </div>
         );
